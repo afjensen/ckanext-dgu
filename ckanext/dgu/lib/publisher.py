@@ -48,7 +48,7 @@ def cached_openness_scores(reports_to_run=None):
     for them on a regular basis
     """
     import json
-    from ckan.lib.jsonp import DateTimeJsonEncoder
+    from ckan.lib.json import DateTimeJsonEncoder
 
     local_reports = set(['openness-scores', 'openness-scores-withsub'])
     if reports_to_run:
