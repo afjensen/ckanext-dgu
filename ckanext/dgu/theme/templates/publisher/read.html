@@ -30,6 +30,9 @@
         <li py:if="h.check_access('package_create', {'groups':c.group.name})">
           <a href="${h.url_for('dataset_new')}?groups__0__id=${c.group.id}">Add a new dataset</a>
         </li>
+        <li py:if="h.check_access('package_create', {'groups':c.group.name})">
+          <a href="${h.url_for(controller='ckanext.dgu.controllers.inventory:InventoryController', action='edit',id=c.group.name)}">Manage inventory</a>
+        </li>        
       </ul>
     </div>
     <div py:if="c.userobj" class="widget-container">

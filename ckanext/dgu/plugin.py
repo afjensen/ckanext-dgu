@@ -316,6 +316,7 @@ class PublisherPlugin(SingletonPlugin):
         map.connect('publisher_read',
                     '/publisher/:id',
                     controller=pub_ctlr, action='read' )
+
         return map
 
     def after_map(self, map):
@@ -327,6 +328,40 @@ class PublisherPlugin(SingletonPlugin):
 
         # same for the harvesting auth profile
         config['ckan.harvest.auth.profile'] = 'publisher'
+
+
+class InventoryPlugin(SingletonPlugin):
+
+    implements(IRoutes, inherit=True)
+    implements(IConfigurer)
+    implements(ISession, inherit=True)
+
+
+    def before_commit(self, session):
+        pass
+
+    def before_map(self, map):
+        inv_ctlr = 'ckanext.dgu.controllers.inventory:InventoryController'
+        map.connect('/inventory/:id/edit',
+                    controller=inv_ctlr, action='edit' )        
+        map.connect('/inventory/:id/edit/download',
+                    controller=inv_ctlr, action='download' )
+        map.connect('/inventory/:id/edit/upload',
+                    controller=inv_ctlr, action='upload' )
+
+        map.connect('/inventory/:id',
+                    controller=inv_ctlr, action='read' )        
+        map.connect('/inventory',
+                    controller=inv_ctlr, action='index' )        
+
+        return map
+
+    def after_map(self, map):
+        return map
+
+    def update_config(self, config):
+        pass
+
 
 class SearchPlugin(SingletonPlugin):
     """
