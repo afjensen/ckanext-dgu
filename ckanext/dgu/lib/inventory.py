@@ -17,10 +17,9 @@ def process_incoming_inventory_row(row):
     publisher_name = row[0].value
     title = row[1].value
     frequency = row[2].value
-    description = row[3].value
-    dataset_id = row[4].value
-
-    # Validate the input!!
+    file_count = row[3].value
+    description = row[4].value
+    dataset_id = row[5].value
 
     # Check if dataset_id exists, and if so just return that we already have this dataset
     pkg = model.Package.get(dataset_id)

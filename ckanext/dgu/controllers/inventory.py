@@ -17,7 +17,7 @@ class InventoryController(BaseController):
 
     def read(self, id):
         """ """
-        return self.edit(id)
+        return "The inventory homepage for {0}".format(id)
 
     def index(self):
         """
