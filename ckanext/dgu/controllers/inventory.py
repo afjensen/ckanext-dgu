@@ -93,7 +93,6 @@ class InventoryController(BaseController):
             tableset = None
             try:
                 _, ext = os.path.splitext( f.name )
-                print ext[1:]
                 tableset = messytables.any_tableset(f,extension=ext[1:])
             except Exception, e:
                 if str(e) == "Unrecognized MIME type: text/plain":
@@ -107,13 +106,15 @@ class InventoryController(BaseController):
 
             c.existing_count = 0
             first = True
+            pos = 0
             for row in tableset.tables[0]:
+                pos = pos + 1
                 if first:
                     first = False
                     continue
 
                 try:
-                    pkg, msg = inventory_lib.process_incoming_inventory_row(row)
+                    pkg, msg = inventory_lib.process_incoming_inventory_row(pos, row, c.group.name)
                     if pkg:
                         c.messages.append((pkg,msg,))
                     else:

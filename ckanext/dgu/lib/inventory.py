@@ -4,7 +4,7 @@ from ckanext.dgu.plugins_toolkit import (c, NotAuthorized,
     ValidationError, get_action, check_access)
 
 
-def process_incoming_inventory_row(row):
+def process_incoming_inventory_row(row_number, row, default_group_name):
     """ 
     Reads the provided row and updates the information found in the 
     database where appropriate.
@@ -14,7 +14,8 @@ def process_incoming_inventory_row(row):
     """
     from ckan import model
 
-    publisher_name = row[0].value
+    publisher_name = row[0].value or default_group_name
+    group = model.Group.get(publisher_name)
     title = row[1].value
     frequency = row[2].value
     file_count = row[3].value
@@ -23,22 +24,52 @@ def process_incoming_inventory_row(row):
 
     # Check if dataset_id exists, and if so just return that we already have this dataset
     pkg = model.Package.get(dataset_id)
-    print "Checking %s" % dataset_id
     if pkg:
         return (None, "",)
+
+    # First validation check, make sure we have enough to either update or create an 
+    # inventory item
+    errors = []
+    if not title.strip():
+        errors.append("Dataset title")
+    if not description.strip():
+        errors.append("Description of dataset")
+
+    if errors:
+        raise Exception("The following fields were missing in row {0}: {1}".format(row_number, ",".join(errors)))
 
     # Check if we can find the dataset by title (for inventory items) and if so then check
     # for changes.
     pkg = model.Session.query(model.Package).filter(model.Package.title==title).first()
     if pkg:
-        # Check inventory==false and if so DO NOT CONTINUE
         if pkg.extras.get('inventory', False):
             # Update the existing revision item.
             model.repo.new_revision()
             pkg.extras['frequency'] = frequency
             pkg.notes = description or pkg.notes
 
-            # add extra fields and save
+            # Update groups if it doesn't have one, and/or it is not set to whatever
+            # is in the CSV
+            current_groups = pkg.get_groups()
+            if len(current_groups) == 0 or publisher_name != current_groups[0].name:
+                old_name = current_groups[0] if current_groups else ""
+                model.repo.new_revision()
+
+                if len(current_groups):
+                    # Remove from existing groups if there are any
+                    members = model.Session.query(model.Member).\
+                        filter(model.Member.group_id == current_groups()[0].id ).\
+                        filter(model.Member.state == 'active').\
+                        filter(model.Member.table_name == "package").\
+                        filter(model.Member.table_id == pkg.id )
+                    for m in members.all():
+                        model.Session.add(m)
+
+                member = model.Member(group_id=group.id,
+                    table_name='package', table_id=pkg.id, capacity='public')
+                model.Session.add(member)
+                model.repo.commit_and_remove()
+
             model.Session.add(pkg)
             model.Session.commit()
 
@@ -63,8 +94,6 @@ def process_incoming_inventory_row(row):
             current = "{0}_{1}".format(current,counter)
         return current
 
-    #if not description:
-    #    raise Exception("No description found for '{0}'".format(title))
 
     package = {}
     package["title"] = title
@@ -81,6 +110,7 @@ def process_incoming_inventory_row(row):
     package['contact-name'] = ""
     package['foi-phone'] = "" 
     package['theme-primary'] = ""
+    #package['state'] = "pending"
 
     package['group'] = publisher_name
 
