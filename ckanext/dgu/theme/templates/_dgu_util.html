@@ -151,7 +151,12 @@
 
   <ul py:def="package_list_from_dict(packages)" class="common-dataset-list">
    <li py:for="package in packages">
-     ${package_summary(package, show_preview_buttons=True)}
+      <py:if test="h.is_inventory_item(package)">
+     ${inventory_summary(package, show_preview_buttons=True)}
+     </py:if>
+      <py:if test="not h.is_inventory_item(package)">
+      ${package_summary(package, show_preview_buttons=True)}
+     </py:if>     
    </li>
   </ul>
 
@@ -182,6 +187,120 @@
        </py:if>
      </div>
   </div>
+
+  <div py:def="inventory_summary(package, show_preview_buttons)" class="wrapper dataset dataset-summary boxed" style='background-color: #dedede;'>
+<style>
+.wrapper {
+  margin: 50px auto;
+  xwidth: 280px;
+  xheight: 370px;
+  background: white;
+  border-radius: 10px;
+  -webkit-box-shadow: 0px 0px 8px rgba(0,0,0,0.3);
+  -moz-box-shadow:    0px 0px 8px rgba(0,0,0,0.3);
+  box-shadow:         0px 0px 8px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 90;
+}
+
+.ribbon-wrapper-green {
+  width: 85px;
+  height: 88px;
+  overflow: hidden;
+  position: absolute;
+  top: -3px;
+  right: -3px;
+}
+
+.ribbon-green {
+  font: bold 15px Sans-Serif;
+  color: #333;
+  text-align: center;
+  text-shadow: rgba(255,255,255,0.5) 0px 1px 0px;
+  -webkit-transform: rotate(45deg);
+  -moz-transform:    rotate(45deg);
+  -ms-transform:     rotate(45deg);
+  -o-transform:      rotate(45deg);
+  position: relative;
+  padding: 7px 0;
+  left: -5px;
+  top: 15px;
+  width: 120px;
+  background-color: #BFDC7A;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#BFDC7A), to(#8EBF45)); 
+  background-image: -webkit-linear-gradient(top, #BFDC7A, #8EBF45); 
+  background-image:    -moz-linear-gradient(top, #BFDC7A, #8EBF45); 
+  background-image:     -ms-linear-gradient(top, #BFDC7A, #8EBF45); 
+  background-image:      -o-linear-gradient(top, #BFDC7A, #8EBF45); 
+  color: #6a6340;
+  -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,0.3);
+  -moz-box-shadow:    0px 0px 3px rgba(0,0,0,0.3);
+  box-shadow:         0px 0px 3px rgba(0,0,0,0.3);
+}
+
+.ribbon-green:before, .ribbon-green:after {
+  content: "";
+  border-top:   3px solid #6e8900;   
+  border-left:  3px solid transparent;
+  border-right: 3px solid transparent;
+  position:absolute;
+  bottom: -3px;
+}
+
+.ribbon-green:before {
+  left: 0;
+}
+.ribbon-green:after {
+  right: 0;
+}
+</style>
+  
+     <div class="ribbon-wrapper-green"><div class="ribbon-green">Inventory</div></div>
+
+
+     <div py:with="title=package.get('title') or package.get('name')">
+       <a class="dataset-header" href="${h.url_for(controller='package', action='read', id=package.get('name'))}">
+         <img class="dataset-icon" src="${'/images/inventory-icon.png' if not h.is_service(package) else '/images/dataset-icon-service.png'}" title="${h.name_for_uklp_type(package)}"/>
+         <h3><span class="underlined">Inventory: ${title}</span></h3>
+       </a>
+       <span class="property pull-right">
+         ${h.updated_string(package)}: ${h.render_datetime(h.updated_date(package), with_hours=False)}
+       </span>
+       <div class="property">
+          Publisher:&nbsp;
+            <a href="${h.url_for(controller='ckanext.dgu.controllers.publisher:PublisherController', action='read', id=h.package_publisher_dict(package).get('name', ''))}">
+              ${h.package_publisher_dict(package).get('title', '')}
+            </a>
+       </div>
+       <div py:if="h.uklp_display_provider(package)" class="property">Provider:&nbsp; ${h.uklp_display_provider(package).strip('"')}</div>
+       <div class="dataset-description">
+         ${h.markdown_extract(package.notes)}
+       </div>
+       <div style="margin-top: 4px;">
+        <table class="table">
+          <tr>
+            <td>Economic Growth</td>
+            <td>0</td>            
+            <td>Social Growth</td>
+            <td>0</td>                        
+          </tr>
+          <tr>
+            <td>Effective Public Services</td>
+            <td>0</td>            
+            <td>Connective Reference Data</td>
+            <td>0</td>                        
+          </tr>
+          <tr>
+            <td>Other Public Services</td>
+            <td>0</td>            
+            <td></td>
+            <td></td>                        
+          </tr>
+        </table>
+      </div>
+     </div>
+  </div>
+
 
   <py:def function="facet_line(facet_item, facet_key)">
       <div class="facet-option">

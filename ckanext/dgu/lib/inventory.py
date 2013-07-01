@@ -2,7 +2,7 @@ import os
 import ckan.lib.munge as munge
 from ckanext.dgu.plugins_toolkit import (c, NotAuthorized, 
     ValidationError, get_action, check_access)
-
+from ckan.lib.search import SearchIndexError
 
 def process_incoming_inventory_row(row_number, row, default_group_name):
     """ 
@@ -20,7 +20,11 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     frequency = row[2].value
     file_count = row[3].value
     description = row[4].value
-    dataset_id = row[5].value
+    recommendation = row[5].value
+    dataset_id = row[6].value
+
+    if not group:
+        raise Exception("Unable to find the publisher {0}".format(publisher_name) )
 
     # Check if dataset_id exists, and if so just return that we already have this dataset
     pkg = model.Package.get(dataset_id)
@@ -110,9 +114,8 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     package['contact-name'] = ""
     package['foi-phone'] = "" 
     package['theme-primary'] = ""
-    #package['state'] = "pending"
 
-    package['group'] = publisher_name
+    package['groups'] = [{"name": publisher_name}]
 
     # Setup inventory specific items
     package['inventory'] = True
@@ -121,8 +124,19 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     package['effective-public-services-score'] = 0
     package['connective-reference-data-score'] = 0            
     package['other-public-services-score'] = 0
+    package['department-recommendation'] = recommendation
 
-    pkg = get_action("package_create")(context, package)
+    try:
+        pkg = get_action("package_create")(context, package)
+    except NotAuthorized:
+        raise Exception("Not authorised to create this dataset")
+    except DataError:
+        raise Exception("There was a problem with the integrity of the data")
+    except SearchIndexError, e:
+        raise Exception("Failed to add this dataset to search index")
+    except ValidationError, e:
+        raise Exception("There was an error validating the data: %s" % str(e))
+
     pkg = context['package']
 
     return (pkg, "Added",)
@@ -132,7 +146,9 @@ def render_inventory_header(writer):
     #   - Reason for non-release
     writer.writerow(["Department ID", "Dataset title", 
                      "Number of files", "Update frequency", 
-                     "Description of dataset", "Dataset ID (internal use)"])
+                     "Description of dataset", 
+                     "Recommendation",
+                     "Dataset ID (internal use)"])
 
 def render_inventory_row(writer, datasets, group):
     """
@@ -144,13 +160,18 @@ def render_inventory_row(writer, datasets, group):
 
     for dataset in datasets:
         row = []            
-        row.append(encode(group.name))      # Group shortname
-        row.append(encode(dataset.title))    # Dataset name
-        row.append(str( len(dataset.resources)))
-        row.append(encode(""))               # Frequency of update
-        row.append(encode(dataset.notes or ""))    # Dataset description                
+        row.append(encode(group.name))           # Group shortname
+        row.append(encode(dataset.title))        # Dataset name
+        row.append(str(len(dataset.resources)))  # Number of resources
+        row.append(encode(""))                   # Frequency of update
+        row.append(encode(dataset.notes.strip() or "No description"))    # Dataset description                
+        row.append(encode(""))                   # Recommendation        
 
-        row.append(encode(dataset.name))    # Dataset identifier                
+        # Should only write the name if it isn't an inventory item
+        if dataset.extras.get('inventory'):
+            row.append(encode(""))
+        else:
+            row.append(encode(dataset.name))
 
         writer.writerow(row)      
 
