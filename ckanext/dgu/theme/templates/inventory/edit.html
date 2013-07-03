@@ -134,8 +134,7 @@
       <div class="notes">
         The tools available on this page will allow you to download your current inventory as a
         CSV file that will be readable in Microsoft Excel, or Open Office, and then also upload a 
-        modified file to update your inventory.  Modifications uploaded <strong>will only</strong> 
-        update the inventory items, and <strong>not</strong> existing published datasets.
+        modified file to update your inventory. 
       </div>
 
       <hr/>
@@ -146,8 +145,7 @@
         <div class="notes">
           <p class="span5">
           You may download your inventory file here and load it into Microsoft Office, or Open Office
-          to view the list of current datasets that ${c.group.display_name} currently holds on data.gov.uk
-          as well as inventory items that have previously been added.        
+          to view the list of current inventory datasets that ${c.group.display_name} currently holds on data.gov.uk.        
           </p>
 
           <form action="${h.url_for(controller='ckanext.dgu.controllers.inventory:InventoryController', action='download', id=c.group.name)}" method="GET" enctype="multipart/form-data" class="form-inline pull-right">
@@ -175,9 +173,8 @@
          </p>
 
           <ul>
-            <li>New entries should not contain a <em>short-name</em></li>
-            <li>Existing inventory items will be updated should any field other than the <em>short-name</em> have changed.</li>
-            <li>Existing datasets will be ignored</li>
+            <li>New entries without a publisher short-name will be added to ${c.group.display_name}</li>
+            <li>Existing inventory items will be updated should any field have changed.</li>
             <li>Existing datasets removed from the file will <strong>not</strong> be removed from data.gov.uk</li>            
           </ul>
         

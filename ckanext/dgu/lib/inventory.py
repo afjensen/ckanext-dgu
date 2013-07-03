@@ -21,15 +21,9 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     file_count = row[3].value
     description = row[4].value
     recommendation = row[5].value
-    dataset_id = row[6].value
 
     if not group:
         raise Exception("Unable to find the publisher {0}".format(publisher_name) )
-
-    # Check if dataset_id exists, and if so just return that we already have this dataset
-    pkg = model.Package.get(dataset_id)
-    if pkg:
-        return (None, "",)
 
     # First validation check, make sure we have enough to either update or create an 
     # inventory item
@@ -147,8 +141,7 @@ def render_inventory_header(writer):
     writer.writerow(["Department ID", "Dataset title", 
                      "Number of files", "Update frequency", 
                      "Description of dataset", 
-                     "Recommendation",
-                     "Dataset ID (internal use)"])
+                     "Recommendation"])
 
 def render_inventory_row(writer, datasets, group):
     """
@@ -159,6 +152,9 @@ def render_inventory_row(writer, datasets, group):
         return s.encode('utf-8')
 
     for dataset in datasets:
+        if not dataset.extras.get('inventory'):
+            continue
+
         row = []            
         row.append(encode(group.name))           # Group shortname
         row.append(encode(dataset.title))        # Dataset name
@@ -166,12 +162,6 @@ def render_inventory_row(writer, datasets, group):
         row.append(encode(""))                   # Frequency of update
         row.append(encode(dataset.notes.strip() or "No description"))    # Dataset description                
         row.append(encode(""))                   # Recommendation        
-
-        # Should only write the name if it isn't an inventory item
-        if dataset.extras.get('inventory'):
-            row.append(encode(""))
-        else:
-            row.append(encode(dataset.name))
 
         writer.writerow(row)      
 

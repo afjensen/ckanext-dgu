@@ -52,7 +52,7 @@ class InventoryController(BaseController):
 
 
         self._get_group_info()
-        return render('inventory/read.html')
+        return render('inventory/edit.html')
 
 
     def upload(self, id):
