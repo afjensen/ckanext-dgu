@@ -1,15 +1,15 @@
 import os
 import ckan.lib.munge as munge
-from ckanext.dgu.plugins_toolkit import (c, NotAuthorized, 
+from ckanext.dgu.plugins_toolkit import (c, NotAuthorized,
     ValidationError, get_action, check_access)
 from ckan.lib.search import SearchIndexError
 
 def process_incoming_inventory_row(row_number, row, default_group_name):
-    """ 
-    Reads the provided row and updates the information found in the 
+    """
+    Reads the provided row and updates the information found in the
     database where appropriate.
 
-    The text of any exception raised will be shown to the user and the 
+    The text of any exception raised will be shown to the user and the
     processing aborted.
     """
     from ckan import model
@@ -25,7 +25,7 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     if not group:
         raise Exception("Unable to find the publisher {0}".format(publisher_name) )
 
-    # First validation check, make sure we have enough to either update or create an 
+    # First validation check, make sure we have enough to either update or create an
     # inventory item
     errors = []
     if not title.strip():
@@ -98,15 +98,15 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     package["name"] = get_clean_name(title)
     package["notes"] = description or " "
     package["access_constraints"] = "Not yet chosen"
-    package["api_version"] = "3"    
-    package['foi-email'] = "" 
-    package['license_id']  = "" 
-    package['foi-web'] = "" 
+    package["api_version"] = "3"
+    package['foi-email'] = ""
+    package['license_id']  = ""
+    package['foi-web'] = ""
     package['contact-email'] = ""
     package['foi-name'] = ""
     package['contact-phone'] = ""
     package['contact-name'] = ""
-    package['foi-phone'] = "" 
+    package['foi-phone'] = ""
     package['theme-primary'] = ""
 
     package['groups'] = [{"name": publisher_name}]
@@ -116,7 +116,7 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     package['economic-growth-score'] = 0
     package['social-growth-score'] = 0
     package['effective-public-services-score'] = 0
-    package['connective-reference-data-score'] = 0            
+    package['connective-reference-data-score'] = 0
     package['other-public-services-score'] = 0
     package['department-recommendation'] = recommendation
 
@@ -138,37 +138,39 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
 def render_inventory_header(writer):
     # Add
     #   - Reason for non-release
-    writer.writerow(["Department ID", "Dataset title", 
-                     "Number of files", "Update frequency", 
-                     "Description of dataset", 
-                     "Recommendation"])
+    writer.writerow(["Department ID", "Dataset title", "Description of dataset",
+                     "Number of files", "Update frequency", "Status"])
 
 def render_inventory_row(writer, datasets, group):
     """
-    Writes out the provided datasets to the provided writer in 
+    Writes out the provided inventory items to the provided writer in
     the correct format.
     """
     def encode(s):
         return s.encode('utf-8')
 
     for dataset in datasets:
-        if not dataset.extras.get('inventory'):
-            continue
-
-        row = []            
+        row = []
         row.append(encode(group.name))           # Group shortname
         row.append(encode(dataset.title))        # Dataset name
+        row.append(encode(dataset.notes.strip() or "No description"))    # Dataset description
         row.append(str(len(dataset.resources)))  # Number of resources
-        row.append(encode(""))                   # Frequency of update
-        row.append(encode(dataset.notes.strip() or "No description"))    # Dataset description                
-        row.append(encode(""))                   # Recommendation        
+        row.append(encode(unicode(dataset.extras.get('inventory',False))))
+        row.append(encode(dataset.state))                   # Recommendation
 
-        writer.writerow(row)      
+        writer.writerow(row)
+
+def render_inventory_template(writer):
+    # Renders a template for completion by the department admin
+    writer.writerow(["Department ID", "Dataset title",
+                     "Number of files", "Update frequency",
+                     "Description of dataset",
+                     "Recommendation"])
 
 
 class UploadFileHelper(object):
     """
-    A contextmanager for handling file uploads by writing it to disk and 
+    A contextmanager for handling file uploads by writing it to disk and
     then returning the relevant file as a fileobj
     """
     def __init__(self, filename, file):
@@ -191,7 +193,7 @@ class UploadFileHelper(object):
 
     def __exit__(self, type, value, traceback):
         try:
-            os.unlink(self.file_path)        
+            os.unlink(self.file_path)
         except:
             pass
 

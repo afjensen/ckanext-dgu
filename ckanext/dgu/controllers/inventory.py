@@ -7,7 +7,7 @@ from ckan import model
 from ckan.lib.helpers import Page, flash_notice
 from ckan.lib.base import h, BaseController, abort
 from ckanext.dgu.lib.publisher import go_down_tree
-from ckanext.dgu.plugins_toolkit import (render, c, request, _,  
+from ckanext.dgu.plugins_toolkit import (render, c, request, _,
     ObjectNotFound, NotAuthorized, ValidationError, get_action, check_access)
 
 import ckanext.dgu.lib.inventory as inventory_lib
@@ -27,9 +27,9 @@ class InventoryController(BaseController):
         return "index"
 
     def edit(self, id):
-        """ 
-        The edit homepage to allow department admins to download and 
-        upload their inventories 
+        """
+        The edit homepage to allow department admins to download and
+        upload their inventories
         """
 
         context = {'model': model, 'session': model.Session,
@@ -45,7 +45,7 @@ class InventoryController(BaseController):
             abort(401, _('Unauthorized to read group %s') % id)
 
         try:
-            context['group'] = c.group            
+            context['group'] = c.group
             check_access('group_update', context)
         except NotAuthorized, e:
             abort(401, _('User %r not authorized to view internal inventory') % (c.user))
@@ -72,21 +72,21 @@ class InventoryController(BaseController):
             abort(401, _('Unauthorized to read group %s') % id)
 
         try:
-            context['group'] = c.group            
+            context['group'] = c.group
             check_access('group_update', context)
         except NotAuthorized, e:
             abort(401, _('User %r not authorized to upload inventory') % (c.user))
 
         if not 'upload' in request.POST or not hasattr(request.POST['upload'], "filename"):
             h.flash_error("No file was selected, please choose a file before uploading", allow_html=True)
-            return h.redirect_to( controller="ckanext.dgu.controllers.inventory:InventoryController", 
+            return h.redirect_to( controller="ckanext.dgu.controllers.inventory:InventoryController",
                 action="edit", id=c.group.name)
 
         self._get_group_info()
         c.messages = []
 
         with inventory_lib.UploadFileHelper(request.POST['upload'].filename, request.POST['upload'].file) as f:
-            import messytables 
+            import messytables
 
             c.errors = []
 
@@ -147,11 +147,12 @@ class InventoryController(BaseController):
 
     def download(self, id):
         """
-        Downloads all of the current datasets for a given publisher as a CSV
+        Downloads all of the current datasets for a given publisher as a read-only
+        CSV file.
         """
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'for_view': True,
-                   'group': id}                   
+                   'group': id}
 
         try:
             c.group_dict = get_action('group_show')(context, {"id": id})
@@ -173,7 +174,7 @@ class InventoryController(BaseController):
             groups = go_down_tree(c.group)
 
         # Set the content-disposition so that it downloads the file
-        # response.headers['Content-Type'] = "text/plain; charset=utf-8"        
+        # response.headers['Content-Type'] = "text/plain; charset=utf-8"
         response.headers['Content-Type'] = "text/csv; charset=utf-8"
         response.headers['Content-Disposition'] = str('attachment; filename=%s-inventory.csv' % (c.group.name,))
 
@@ -182,5 +183,41 @@ class InventoryController(BaseController):
         for gp in groups:
             ds = gp.members_of_type(model.Package).all()
             inventory_lib.render_inventory_row(writer, ds, gp)
+
+    def template(self, id):
+        """
+        Downloads a template
+        """
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author, 'for_view': True,
+                   'group': id}
+
+        try:
+            c.group_dict = get_action('group_show')(context, {"id": id})
+            c.group = context['group']
+        except ObjectNotFound:
+            self._redirect_if_previous_name(id)
+            abort(404, _('Group not found'))
+        except NotAuthorized:
+            abort(401, _('Unauthorized to read group %s') % id)
+
+        try:
+            context['group'] = c.group
+            check_access('group_update', context)
+        except NotAuthorized, e:
+            abort(401, _('User %r not authorized to download inventory') % (c.user))
+
+        groups = [c.group]
+        if request.params.get('include_sub') == 'true':
+            groups = go_down_tree(c.group)
+
+        # Set the content-disposition so that it downloads the file
+        # response.headers['Content-Type'] = "text/plain; charset=utf-8"
+        response.headers['Content-Type'] = "text/csv; charset=utf-8"
+        response.headers['Content-Disposition'] = str('attachment; filename=%s-inventory-template.csv' % (c.group.name,))
+
+        writer = csv.writer(response)
+        inventory_lib.render_inventory_template(writer)
+
 
 
