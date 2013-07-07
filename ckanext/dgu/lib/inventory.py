@@ -47,7 +47,10 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     # for changes.
     pkg = model.Session.query(model.Package).filter(model.Package.title==title).first()
     if pkg:
-        if pkg.extras.get('inventory', False):
+        # Only update this if it is an existing inventory item and we should also check the
+        # group name matches
+        matching_group = pkg.get_groups('publisher')[0].name == publisher_name
+        if pkg.extras.get('inventory', False) and matching_group:
             # Update the existing revision item.
             model.repo.new_revision()
             pkg.extras['frequency'] = frequency
