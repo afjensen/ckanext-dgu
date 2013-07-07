@@ -119,7 +119,7 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
 def render_inventory_header(writer):
     # Add
     #   - Reason for non-release
-    writer.writerow(["Department ID", "Dataset title", "Description of dataset",
+    writer.writerow(["Department", "Dataset title", "Description of dataset",
                      "Number of files", "Update frequency", "Status"])
 
 def render_inventory_row(writer, datasets, group):
@@ -132,7 +132,7 @@ def render_inventory_row(writer, datasets, group):
 
     for dataset in datasets:
         row = []
-        row.append(encode(group.name))           # Group shortname
+        row.append(encode(group.title))           # Group shortname
         row.append(encode(dataset.title))        # Dataset name
         row.append(encode(dataset.notes.strip() or "No description"))    # Dataset description
         row.append(str(len(dataset.resources)))  # Number of resources
