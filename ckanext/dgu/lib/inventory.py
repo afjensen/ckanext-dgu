@@ -4,6 +4,14 @@ from ckanext.dgu.plugins_toolkit import (c, NotAuthorized,
     ValidationError, get_action, check_access)
 from ckan.lib.search import SearchIndexError
 
+def render_inventory_template(writer):
+    # Renders a template for completion by the department admin
+    writer.writerow(["Dataset title",
+                     "Description of dataset",
+                     "Update frequency",
+                     "Recommendation"])
+
+
 def process_incoming_inventory_row(row_number, row, default_group_name):
     """
     Reads the provided row and updates the information found in the
@@ -14,13 +22,12 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
     """
     from ckan import model
 
-    publisher_name = row[0].value or default_group_name
+    publisher_name = default_group_name
     group = model.Group.get(publisher_name)
-    title = row[1].value
+    title = row[0].value
+    description = row[1].value
     frequency = row[2].value
-    file_count = row[3].value
-    description = row[4].value
-    recommendation = row[5].value
+    recommendation = row[3].value
 
     if not group:
         raise Exception("Unable to find the publisher {0}".format(publisher_name) )
@@ -45,29 +52,7 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
             model.repo.new_revision()
             pkg.extras['frequency'] = frequency
             pkg.notes = description or pkg.notes
-
-            # Update groups if it doesn't have one, and/or it is not set to whatever
-            # is in the CSV
-            current_groups = pkg.get_groups()
-            if len(current_groups) == 0 or publisher_name != current_groups[0].name:
-                old_name = current_groups[0] if current_groups else ""
-                model.repo.new_revision()
-
-                if len(current_groups):
-                    # Remove from existing groups if there are any
-                    members = model.Session.query(model.Member).\
-                        filter(model.Member.group_id == current_groups()[0].id ).\
-                        filter(model.Member.state == 'active').\
-                        filter(model.Member.table_name == "package").\
-                        filter(model.Member.table_id == pkg.id )
-                    for m in members.all():
-                        model.Session.add(m)
-
-                member = model.Member(group_id=group.id,
-                    table_name='package', table_id=pkg.id, capacity='public')
-                model.Session.add(member)
-                model.repo.commit_and_remove()
-
+            pkg.extras['department-recommendation'] = recommendation
             model.Session.add(pkg)
             model.Session.commit()
 
@@ -113,11 +98,7 @@ def process_incoming_inventory_row(row_number, row, default_group_name):
 
     # Setup inventory specific items
     package['inventory'] = True
-    package['economic-growth-score'] = 0
-    package['social-growth-score'] = 0
-    package['effective-public-services-score'] = 0
-    package['connective-reference-data-score'] = 0
-    package['other-public-services-score'] = 0
+    package['frequency'] = frequency
     package['department-recommendation'] = recommendation
 
     try:
@@ -159,13 +140,6 @@ def render_inventory_row(writer, datasets, group):
         row.append(encode(dataset.state))                   # Recommendation
 
         writer.writerow(row)
-
-def render_inventory_template(writer):
-    # Renders a template for completion by the department admin
-    writer.writerow(["Department ID", "Dataset title",
-                     "Number of files", "Update frequency",
-                     "Description of dataset",
-                     "Recommendation"])
 
 
 class UploadFileHelper(object):

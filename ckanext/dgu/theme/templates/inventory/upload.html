@@ -31,7 +31,7 @@
         </li>
         <li py:if="h.check_access('package_create', {'groups':c.group.name})">
           <a href="${h.url_for('dataset_new')}?groups__0__id=${c.group.id}">Add a new dataset</a>
-        </li>        
+        </li>
       </ul>
     </div>
     <div py:if="c.userobj" class="widget-container">
@@ -140,7 +140,6 @@
           Import was successful<br/>
           <ul>
             <li>${len(c.messages)} inventory items processed</li>
-            <li>${c.existing_count} existing datasets not processed.</li>
           </ul>
         </div>
       </div>
@@ -152,13 +151,13 @@
         <table class="table table-bordered table-striped">
           <thead>
             <th>Title</th>
-            <th>Action</th>            
+            <th>Action</th>
           </thead>
           <tbody>
             <py:for each="pkg,action in c.messages">
               <tr>
                 <td><a href="${h.url_for(controller='ckanext.dgu.controllers.package:PackageController', action='read', id=pkg.name)}">${pkg.title}</a></td>
-                <td>${action}</td>              
+                <td>${action}</td>
               </tr>
             </py:for>
           </tbody>

@@ -104,7 +104,6 @@ class InventoryController(BaseController):
                 c.errors.append("Unable to row data from uploaded file. Please contact a sysadmin.")
                 return render('inventory/upload.html')
 
-            c.existing_count = 0
             first = True
             pos = 0
             for row in tableset.tables[0]:
@@ -117,8 +116,6 @@ class InventoryController(BaseController):
                     pkg, msg = inventory_lib.process_incoming_inventory_row(pos, row, c.group.name)
                     if pkg:
                         c.messages.append((pkg,msg,))
-                    else:
-                        c.existing_count = c.existing_count + 1
                 except Exception, exc:
                     c.errors.append(str(exc))
                     break
