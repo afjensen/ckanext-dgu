@@ -88,10 +88,10 @@
     <tr>
       <td class="left" py:if="not c.query_error">
         <h2 class="result-count">${c.page.item_count if c.page not in (None, '') else c.package_count or 0}</h2>
-        <py:if test="request.params">      
+        <py:if test="request.params">
           <div class="result-count-footer">Results</div>
         </py:if>
-        <py:if test="not request.params">      
+        <py:if test="not request.params">
           <div class="result-count-footer">Datasets</div>
         </py:if>
       </td>
@@ -106,8 +106,8 @@
           <div class="search-spinner">&nbsp;</div>
           <input type="submit" value="${_('Search')}" class="btn btn-primary button" />
           <span py:if="c.fields">
-          <py:for each="(k, v) in c.fields"> 
-            <input type="hidden" name="${k}" value="${v}" />  
+          <py:for each="(k, v) in c.fields">
+            <input type="hidden" name="${k}" value="${v}" />
           </py:for>
           </span>
           <py:if test="request.params.get('ext_bbox','')">
@@ -156,7 +156,7 @@
      </py:if>
       <py:if test="not h.is_inventory_item(package)">
       ${package_summary(package, show_preview_buttons=True)}
-     </py:if>     
+     </py:if>
    </li>
   </ul>
 
@@ -227,11 +227,11 @@
   top: 15px;
   width: 120px;
   background-color: #BFDC7A;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#BFDC7A), to(#8EBF45)); 
-  background-image: -webkit-linear-gradient(top, #BFDC7A, #8EBF45); 
-  background-image:    -moz-linear-gradient(top, #BFDC7A, #8EBF45); 
-  background-image:     -ms-linear-gradient(top, #BFDC7A, #8EBF45); 
-  background-image:      -o-linear-gradient(top, #BFDC7A, #8EBF45); 
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#BFDC7A), to(#8EBF45));
+  background-image: -webkit-linear-gradient(top, #BFDC7A, #8EBF45);
+  background-image:    -moz-linear-gradient(top, #BFDC7A, #8EBF45);
+  background-image:     -ms-linear-gradient(top, #BFDC7A, #8EBF45);
+  background-image:      -o-linear-gradient(top, #BFDC7A, #8EBF45);
   color: #6a6340;
   -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,0.3);
   -moz-box-shadow:    0px 0px 3px rgba(0,0,0,0.3);
@@ -240,7 +240,7 @@
 
 .ribbon-green:before, .ribbon-green:after {
   content: "";
-  border-top:   3px solid #6e8900;   
+  border-top:   3px solid #6e8900;
   border-left:  3px solid transparent;
   border-right: 3px solid transparent;
   position:absolute;
@@ -254,7 +254,7 @@
   right: 0;
 }
 </style>
-  
+
      <div class="ribbon-wrapper-green"><div class="ribbon-green">Inventory</div></div>
 
 
@@ -276,28 +276,6 @@
        <div class="dataset-description">
          ${h.markdown_extract(package.notes)}
        </div>
-       <div style="margin-top: 4px;">
-        <table class="table">
-          <tr>
-            <td>Economic Growth</td>
-            <td>0</td>            
-            <td>Social Growth</td>
-            <td>0</td>                        
-          </tr>
-          <tr>
-            <td>Effective Public Services</td>
-            <td>0</td>            
-            <td>Connective Reference Data</td>
-            <td>0</td>                        
-          </tr>
-          <tr>
-            <td>Other Public Services</td>
-            <td>0</td>            
-            <td></td>
-            <td></td>                        
-          </tr>
-        </table>
-      </div>
      </div>
   </div>
 
@@ -370,32 +348,32 @@
   <div py:def="facet_filters()" class="datasets">
     <div class="boxed">
       ${facet_box(
-          'license_id-is-ogl', 
-          'Licence', 
+          'license_id-is-ogl',
+          'Licence',
           'There are no further licence filters to apply.'
       )}
       ${facet_box(
-          'tags', 
-          'Tags', 
-          'There are no further tag filters to apply.', 
+          'tags',
+          'Tags',
+          'There are no further tag filters to apply.',
           more_button='more-tags-button'
       )}
       ${facet_box(
-          'res_format', 
-          'Resource Format', 
-          'There are no further resource format filters to apply.', 
+          'res_format',
+          'Resource Format',
+          'There are no further resource format filters to apply.',
           more_button='more-formats-button'
       )}
       ${facet_box(
-          'publisher', 
-          'Publisher', 
-          'There are no further publisher filters to apply.', 
+          'publisher',
+          'Publisher',
+          'There are no further publisher filters to apply.',
           more_button='more-publishers-button'
       )}
       ${facet_box(
-          'openness_score', 
-          'Openness Score (beta)', 
-          'There are no further openness filters to apply.', 
+          'openness_score',
+          'Openness Score (beta)',
+          'There are no further openness filters to apply.',
           sort_by='name'
       )}
 
